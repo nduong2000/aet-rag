@@ -1,0 +1,44 @@
+flowchart TB
+    User["👤 User"]
+    
+    subgraph "Document Processing"
+        Documents[("Documents\n(.doc, .pdf, etc.)")]
+        ChromaDB[("ChromaDB\nVector Store")]
+        CreateDB["create_chroma_db.py"]
+    end
+    
+    subgraph "Google Cloud Platform"
+        subgraph "Cloud Run"
+            Flask["Flask Web App"]
+            RAG["RAG Engine"]
+        end
+        
+        subgraph "Vertex AI"
+            TextEmbedding["Text Embedding API\ntext-embedding-004"]
+            GeminiAPI["Gemini API\ngemini-2.0-flash-lite-001"]
+        end
+    end
+    
+    Documents -->|Load & Split| CreateDB
+    CreateDB -->|Generate Embeddings|TextEmbedding
+    TextEmbedding -->|Store Vectors|CreateDB
+    CreateDB -->|Populate|ChromaDB
+    
+    User -->|Question|Flask
+    Flask -->|Query|RAG
+    RAG -->|Search|ChromaDB
+    ChromaDB -->|Relevant Chunks|RAG
+    RAG -->|Generate Query Embedding|TextEmbedding
+    RAG -->|Context + Query|GeminiAPI
+    GeminiAPI -->|Answer|RAG
+    RAG -->|Response|Flask
+    Flask -->|Display|User
+    
+    classDef local fill:#FFD700,stroke:#B8860B,color:black
+    classDef gcp fill:#4285F4,stroke:#3367D6,color:white
+    classDef db fill:#0F9D58,stroke:#0B8043,color:white
+    classDef ai fill:#DB4437,stroke:#B31412,color:white
+    
+    class Documents,CreateDB,ChromaDB local
+    class Flask,RAG gcp
+    class TextEmbedding,GeminiAPI ai

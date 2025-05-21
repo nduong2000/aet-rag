@@ -1,0 +1,84 @@
+{
+  "total_documents": 47,
+  "numbered_definitions": 37,
+  "single_definitions": 0,
+  "multiple_definitions": 37,
+  "complete_definitions": 0,
+  "partial_definitions": 37,
+  "embedded_tables": 10,
+  "excel_sheets": 0,
+  "value_mapping_tables": 0,
+  "field_specifications": 37,
+  "content_types": {
+    "multiple_numbered_definitions": 37,
+    "table_content": 10
+  },
+  "chunk_strategies": {
+    "smart_numbered_definition": 37,
+    "preserved_table": 10
+  },
+  "definition_numbers": [
+    "00",
+    "04",
+    "1",
+    "123",
+    "170",
+    "2",
+    "2005",
+    "42",
+    "45",
+    "68",
+    "95",
+    "98"
+  ],
+  "technical_names": [],
+  "table_types": {
+    "value_mapping": 1,
+    "field_specification": 1,
+    "appendix_lookup": 1,
+    "docx_table": 7
+  },
+  "quality_metrics": {
+    "average_content_length": 2319.574468085106,
+    "average_complexity": 0.0,
+    "average_completeness": 0.7872340425531915,
+    "definition_coverage": 12,
+    "complete_definition_ratio": 0.0,
+    "table_coverage": 10,
+    "excel_coverage": 0,
+    "technical_name_coverage": 0,
+    "content_diversity": 2,
+    "file_coverage": 1,
+    "average_definition_length": 2382.7837837837837,
+    "hcfa_field_coverage": 0
+  },
+  "field_categories": {
+    "unknown": 37
+  },
+  "excel_processing_stats": {
+    "total_excel_docs": 0,
+    "sheets_processed": 0,
+    "lookup_tables": 0,
+    "value_mappings": 0
+  },
+  "hcfa_fields": {},
+  "file_coverage": {
+    "Aetna-universal-medical-dental-data-dictionary.docx": 47
+  },
+  "chunk_strategy_details": {
+    "smart_numbered_definition": {
+      "count": 37,
+      "total_length": 88163,
+      "avg_length": 2382.7837837837837,
+      "with_definitions": 37,
+      "with_tables": 0
+    },
+    "preserved_table": {
+      "count": 10,
+      "total_length": 20857,
+      "avg_length": 2085.7,
+      "with_definitions": 0,
+      "with_tables": 10
+    }
+  }
+}

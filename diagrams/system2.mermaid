@@ -1,0 +1,34 @@
+flowchart LR
+    subgraph "Client"
+        User["👤 User"]
+        Browser["🌐 Browser"]
+    end
+    
+    subgraph "Google Cloud Platform"
+        subgraph "Cloud Run Service"
+            Flask["Flask App"]
+            VectorDB["ChromaDB"]
+        end
+        
+        subgraph "Vertex AI"
+            Embedding["Embedding Model\ntext-embedding-004"]
+            LLM["LLM\ngemini-2.0-flash-lite-001"]
+        end
+    end
+    
+    User --> Browser
+    Browser -->|HTTP Request| Flask
+    Flask -->|Query| VectorDB
+    Flask -->|Generate Embeddings| Embedding
+    Embedding -->|Vector| Flask
+    Flask -->|Prompt + Context| LLM
+    LLM -->|Response| Flask
+    Flask -->|Answer| Browser
+    Browser -->|Display Answer| User
+    
+    classDef gcp fill:#4285F4,stroke:#3367D6,color:white
+    classDef run fill:#0F9D58,stroke:#0B8043,color:white
+    classDef ai fill:#DB4437,stroke:#B31412,color:white
+    
+    class Flask,VectorDB run
+    class Embedding,LLM ai

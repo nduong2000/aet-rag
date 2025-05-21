@@ -1,0 +1,31 @@
+[Unit]
+Description=Enhanced RAG Flask Application
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=aeth-rag
+Group=aeth-rag
+WorkingDirectory=/home/aeth
+Environment=PATH=/home/aeth/venv/bin
+ExecStart=/home/aeth/venv/bin/python3 run.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=aeth-app
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/home/aeth
+
+# Resource limits
+LimitNOFILE=65536
+MemoryMax=4G
+
+[Install]
+WantedBy=multi-user.target

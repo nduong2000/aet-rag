@@ -1,0 +1,35 @@
+sequenceDiagram
+    actor User
+    participant WebApp as Flask Web App
+    participant DB as ChromaDB
+    participant Embed as Vertex AI Embedding
+    participant LLM as Gemini Model
+    
+    Note over User,LLM: RAG Chat Flow
+    
+    User->>WebApp: Ask Question
+    WebApp->>Embed: Generate Embedding for Query
+    Embed-->>WebApp: Return Query Embedding
+    WebApp->>DB: Search for Relevant Documents
+    DB-->>WebApp: Return Top K Relevant Text Chunks
+    
+    alt Relevant Documents Found
+        WebApp->>WebApp: Construct Prompt with Context
+    else No Relevant Documents
+        WebApp->>WebApp: Construct Prompt with Empty Context
+    end
+    
+    WebApp->>LLM: Send Prompt with Context + Question
+    LLM-->>WebApp: Generate Answer
+    WebApp-->>User: Display Answer
+    
+    Note over User,LLM: Initialization Flow (One Time)
+    
+    participant Processor as Document Processor
+    
+    Processor->>Processor: Load Documents from ./documents
+    Processor->>Processor: Split Documents into Chunks
+    Processor->>Embed: Generate Embeddings for Chunks
+    Embed-->>Processor: Return Document Embeddings
+    Processor->>DB: Store Documents + Embeddings
+    DB-->>Processor: Confirm Storage

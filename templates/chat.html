@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Medical/Dental File Data Dictionary</title>
+    <style>
+        :root {
+            --primary-color: #0078d4;
+            --secondary-color: #f5f5f5;
+            --border-color: #ddd;
+            --text-color: #333;
+            --light-text: #666;
+            --hover-color: #106ebe;
+        }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            background-color: #f8f9fa; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh;
+            color: var(--text-color);
+        }
+        .chat-container { 
+            width: 95%; 
+            max-width: 900px; 
+            background-color: #fff; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08); 
+            border-radius: 8px; 
+            display: flex; 
+            flex-direction: column; 
+            height: 85vh; 
+            position: relative;
+        }
+        .chat-header { 
+            background-color: var(--primary-color); 
+            color: white; 
+            padding: 15px; 
+            text-align: center; 
+            border-top-left-radius: 8px; 
+            border-top-right-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .chat-header h2 {
+            margin: 0;
+            font-weight: 500;
+        }
+        .chat-header p {
+            margin: 5px 0 0 0;
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+        .config-bar {
+            display: flex;
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--secondary-color);
+            align-items: center;
+        }
+        .model-select {
+            padding: 6px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-left: 10px;
+            flex-grow: 1;
+        }
+        .model-label {
+            font-size: 0.9rem;
+            color: var(--light-text);
+            font-weight: 500;
+        }
+        .examples-dropdown {
+            position: relative;
+            margin-left: 10px;
+        }
+        .examples-btn {
+            padding: 6px 12px;
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .examples-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 350px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            z-index: 1;
+            border-radius: 4px;
+            right: 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .examples-content p {
+            padding: 10px 15px;
+            margin: 0;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .examples-content p:hover {
+            background-color: #f5f9ff;
+        }
+        .examples-dropdown:hover .examples-content {
+            display: block;
+        }
+        .chat-messages { 
+            flex-grow: 1; 
+            padding: 20px; 
+            overflow-y: auto; 
+            border-bottom: 1px solid var(--border-color);
+        }
+        .message { 
+            margin-bottom: 15px; 
+            padding: 12px 15px; 
+            border-radius: 6px; 
+            line-height: 1.5;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            max-width: 75%;
+        }
+        .user-message { 
+            background-color: #e1f5fe; 
+            text-align: right; 
+            margin-left: auto; 
+            border-bottom-right-radius: 2px;
+            color: #01579b;
+        }
+        .bot-message { 
+            background-color: var(--secondary-color); 
+            text-align: left; 
+            margin-right: auto; 
+            border-bottom-left-radius: 2px;
+        }
+        .bot-message strong { 
+            font-weight: 600; 
+            display: block; 
+            margin-bottom: 5px; 
+            color: var(--primary-color);
+        }
+        .chat-input { 
+            display: flex; 
+            padding: 15px; 
+            border-top: 1px solid var(--border-color);
+            background-color: white;
+        }
+        #userInput { 
+            flex-grow: 1; 
+            padding: 12px 15px; 
+            border: 1px solid var(--border-color); 
+            border-radius: 4px; 
+            margin-right: 10px;
+            font-size: 1rem;
+            outline: none;
+        }
+        #userInput:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(0,120,212,0.2);
+        }
+        #sendButton { 
+            padding: 10px 20px; 
+            background-color: var(--primary-color); 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        #sendButton:hover { 
+            background-color: var(--hover-color);
+        }
+        .loader {
+            display: none;
+            border: 3px solid rgba(0,120,212,0.2);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .source-info {
+            font-size: 0.8rem;
+            margin-top: 8px;
+            color: var(--light-text);
+        }
+        .confidence-indicator {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+            background-color: #e6f7ff;
+            color: #0078d4;
+        }
+        code {
+            background-color: rgba(0,0,0,0.05);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2>Universal Medical/Dental File Data Dictionary</h2>
+            <p>Interactive RAG-assisted knowledge base</p>
+        </div>
+        <div class="config-bar">
+            <span class="model-label">Model:</span>
+            <select class="model-select" id="modelSelect">
+                <option value="gemini-2.5-flash-preview-04-17">Gemini 2.5 Flash - Faster</option>
+                <option value="gemini-2.5-pro-preview-05-06">Gemini 2.5 Pro - More Accurate</option>
+            </select>
+            <div class="examples-dropdown">
+                <button class="examples-btn">Example Questions</button>
+                <div class="examples-content">
+                    <p class="example-question">How many Claim-Level ICD Procedure Code are there?</p>
+                    <p class="example-question">What is the technical name for Diagnosis Code 2?</p>
+                    <p class="example-question">What is ICD9_DX_CD?</p>
+                    <p class="example-question">Present on Admission Code</p>
+                    <p class="example-question">Explain Aexcel Designated Provider Specialty</p>
+                    <p class="example-question">explain Claim-Level ICD Procedure Code 1</p>
+                </div>
+            </div>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot-message">
+                <strong>Assistant:</strong> Welcome to the Universal Medical/Dental File Data Dictionary. How can I help you find information today?
+            </div>
+        </div>
+        <div class="chat-input">
+            <div class="loader" id="loader"></div>
+            <input type="text" id="userInput" placeholder="Ask a question about the data dictionary...">
+            <button id="sendButton">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
+        const loader = document.getElementById('loader');
+        const modelSelect = document.getElementById('modelSelect');
+        const exampleQuestions = document.querySelectorAll('.example-question');
+
+        function addMessage(sender, text, metadata = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            
+            if (sender === 'user') {
+                messageDiv.classList.add('user-message');
+                messageDiv.textContent = text;
+            } else {
+                messageDiv.classList.add('bot-message');
+                let botResponseHTML = `<strong>Assistant:</strong> ${text.replace(/\n/g, '<br>')}`;
+                
+                // Add confidence score if available
+                if (metadata && metadata.confidence_score !== undefined) {
+                    const confidencePercent = Math.round(metadata.confidence_score * 100);
+                    botResponseHTML += `<span class="confidence-indicator">Confidence: ${confidencePercent}%</span>`;
+                }
+                
+                // Add model used if available
+                if (metadata && metadata.model_used) {
+                    const modelName = metadata.model_used.includes('gemini-2.5-flash') ? 'Gemini 2.5 Flash' : 
+                                  metadata.model_used.includes('gemini-2.5-pro') ? 'Gemini 2.5 Pro' : 
+                                  metadata.model_used;
+                    botResponseHTML += `<span class="confidence-indicator">Model: ${modelName}</span>`;
+                }
+                
+                // Add response time if available
+                if (metadata && metadata.response_time !== undefined) {
+                    botResponseHTML += `<span class="confidence-indicator">Time: ${metadata.response_time}s</span>`;
+                }
+                
+                // Add source information if available
+                if (metadata && metadata.sources && metadata.sources.length > 0) {
+                    botResponseHTML += `<div class="source-info">Sources: `;
+                    metadata.sources.forEach((source, index) => {
+                        if (index > 0) botResponseHTML += ', ';
+                        botResponseHTML += `${source.source || 'Unknown'} (p.${source.page || 'N/A'})`;
+                    });
+                    botResponseHTML += `</div>`;
+                }
+                
+                messageDiv.innerHTML = botResponseHTML;
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll to bottom
+        }
+
+        async function sendMessage() {
+            const query = userInput.value.trim();
+            if (!query) return;
+
+            // Get the selected model
+            const selectedModel = modelSelect.value;
+
+            addMessage('user', query);
+            userInput.value = '';
+            loader.style.display = 'block';
+            sendButton.disabled = true;
+
+            try {
+                const response = await fetch('/chat_rag', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        query: query,
+                        model: selectedModel
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    addMessage('bot', `Error: ${errorData.error || response.statusText}`);
+                    return;
+                }
+
+                const data = await response.json();
+                
+                // Create metadata object for rendering
+                const metadata = {
+                    confidence_score: data.confidence_score,
+                    sources: data.retrieved_sources_metadata,
+                    model_used: data.model_used,
+                    response_time: data.response_time
+                };
+                
+                addMessage('bot', data.answer, metadata);
+
+            } catch (error) {
+                console.error('Error sending message:', error);
+                addMessage('bot', 'Sorry, I encountered an error. Please try again.');
+            } finally {
+                loader.style.display = 'none';
+                sendButton.disabled = false;
+                userInput.focus();
+            }
+        }
+
+        // Set up event listeners
+        sendButton.addEventListener('click', sendMessage);
+        
+        userInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        // Set up example question clicks
+        exampleQuestions.forEach(question => {
+            question.addEventListener('click', function() {
+                userInput.value = this.textContent;
+                userInput.focus();
+            });
+        });
+    </script>
+</body>
+</html>

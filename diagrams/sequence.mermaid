@@ -1,0 +1,26 @@
+%% ----------------------------------------------------------------------
+%% This diagram shows the sequence of interactions for a RAG query.
+%% Direct icon embedding in participant names is less standard and
+%% might not render well or be supported in all Mermaid environments.
+%% Using an alias with an <img> tag *might* work in some renderers,
+%% but is often omitted for clarity in sequence diagrams.
+%% Example of potential HTML in participant (might not render well):
+%%   participant CR as "<img src='URL_TO_GCP_CLOUD_RUN_ICON.svg' width='20'><br>Cloud Run RAG App"
+
+sequenceDiagram
+    title RAG Application Query Sequence
+
+    actor User
+    participant CR as Cloud Run RAG App
+    participant EmbSvc as Vertex AI Embedding Service
+    participant LLMSvc as Vertex AI LLM Service
+    participant CDB as ChromaDB (within Cloud Run)
+
+    User->>+CR: Submit Query (e.g., "What is X?")
+    CR->>+EmbSvc: Embed User Query
+    EmbSvc-->>-CR: Return Query Embedding
+    CR->>+CDB: Retrieve Relevant Chunks (using Query Embedding)
+    CDB-->>-CR: Return Document Chunks (Context)
+    CR->>+LLMSvc: Send (Context + Original Query)
+    LLMSvc-->>-CR: Return Generated Answer
+    CR-->>-User: Display Answer

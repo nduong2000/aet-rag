@@ -1,0 +1,41 @@
+# Requirements for Enhanced RAG System with LangGraph
+# Minimal requirements - let pip handle version resolution
+flask
+python-dotenv
+gunicorn
+
+# LangChain ecosystem
+langchain
+langchain-google-vertexai
+langchain-community
+langchain-unstructured
+
+# LangGraph
+langgraph
+
+# Vector database
+chromadb
+
+# Document processing
+unstructured[pdf,docx,xlsx]  # Added xlsx support
+python-docx
+
+# Excel file support (essential for embedded tables)
+openpyxl  # For .xlsx files
+xlrd  # For older .xls files
+xlsxwriter  # For writing Excel files if needed
+
+# Google Cloud
+google-cloud-aiplatform
+google-auth
+
+# Data processing
+pandas
+numpy
+regex
+
+# Optional but recommended for better performance
+# Uncomment if needed:
+# pypdf  # For better PDF processing
+# python-magic-bin  # For file type detection (Windows)
+# python-magic  # For file type detection (Linux/Mac)

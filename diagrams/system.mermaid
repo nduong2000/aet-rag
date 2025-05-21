@@ -1,0 +1,45 @@
+%% ----------------------------------------------------------------------
+%% 2. System Diagram (using flowchart and embedded HTML for icons)
+%% ----------------------------------------------------------------------
+%% This diagram uses flowchart syntax.
+%% GCP icons are included using HTML <img> tags within node labels.
+%% Replace 'URL_TO_GCP_ICON_...' with actual URLs to your hosted icon images.
+%% You can find official GCP icons at https://cloud.google.com/icons
+
+graph TD
+    subgraph "User End"
+        User["<img src='https://placehold.co/40x40/E8F0FE/000000?text=User' width='40' alt='User Icon'><br>User"]
+    end
+
+    subgraph "Google Cloud Platform (aethrag-459318)"
+        direction LR
+        subgraph "Cloud Run Service (rag-chroma-service)"
+            CR_App["<img src='https://cloud.google.com/icons/images/cloud/products/icons/run.svg' width='40' alt='Cloud Run Icon'><br>Cloud Run App (main.py)<br><i>Contains ChromaDB Data</i>"]
+        end
+
+        subgraph "Vertex AI"
+            direction LR
+            EmbeddingModel["<img src='https://cloud.google.com/icons/images/cloud/products/icons/vertex-ai.svg' width='40' alt='Vertex AI Icon'><br>Vertex AI Embedding<br>(text-embedding-004)"]
+            LLM["<img src='https://cloud.google.com/icons/images/cloud/products/icons/vertex-ai.svg' width='40' alt='Vertex AI Icon'><br>Vertex AI LLM<br>(Gemini Pro)"]
+        end
+
+        subgraph "Offline Data Preparation"
+             direction TB
+             Docs["<img src='https://placehold.co/40x40/FFF/000?text=DOCS' width='40' alt='Documents Icon'><br>Source Documents<br>(./documents)"]
+             CreateDB["<img src='https://cloud.google.com/icons/images/cloud/products/icons/compute.svg' width='40' alt='Compute/Script Icon'><br>create_chroma_db.py"]
+             ChromaDataLocal["<img src='https://placehold.co/40x40/E0E0E0/000?text=DB' width='40' alt='ChromaDB Icon'><br>ChromaDB Data Files<br>(./chroma_db_data)"]
+        end
+    end
+
+    User -- "HTTPS Request (Query)" --> CR_App
+    CR_App -- "1. Embed Query" --> EmbeddingModel
+    EmbeddingModel -- "Embedded Query" --> CR_App
+    CR_App -- "2. Retrieve Context (from bundled ChromaDB)" --> CR_App
+    CR_App -- "3. Send Context + Query" --> LLM
+    LLM -- "Generated Answer" --> CR_App
+    CR_App -- "HTTPS Response (Answer)" --> User
+
+    Docs -- "Processed by" --> CreateDB
+    CreateDB -- "Generates/Uses" --> EmbeddingModel
+    CreateDB -- "Stores into" --> ChromaDataLocal
+    ChromaDataLocal -- "Bundled into" --> CR_App
