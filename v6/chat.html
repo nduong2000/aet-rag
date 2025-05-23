@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Universal Medical/Dental File Data Dictionary</title>
+    <style>
+        :root {
+            --primary-color: #0078d4;
+            --secondary-color: #f5f5f5;
+            --border-color: #ddd;
+            --text-color: #333;
+            --light-text: #666;
+            --hover-color: #106ebe;
+            --citation-bg: #f8f9fa;
+            --citation-border: #e9ecef;
+        }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            background-color: #f8f9fa; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh;
+            color: var(--text-color);
+        }
+        .chat-container { 
+            width: 95%; 
+            max-width: 900px; 
+            background-color: #fff; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08); 
+            border-radius: 8px; 
+            display: flex; 
+            flex-direction: column; 
+            height: 85vh; 
+            position: relative;
+        }
+        .chat-header { 
+            background-color: var(--primary-color); 
+            color: white; 
+            padding: 15px; 
+            text-align: center; 
+            border-top-left-radius: 8px; 
+            border-top-right-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .chat-header h2 {
+            margin: 0;
+            font-weight: 500;
+        }
+        .chat-header p {
+            margin: 5px 0 0 0;
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+        .config-bar {
+            display: flex;
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--secondary-color);
+            align-items: center;
+        }
+        .model-select {
+            padding: 6px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-left: 10px;
+            flex-grow: 1;
+        }
+        .model-label {
+            font-size: 0.9rem;
+            color: var(--light-text);
+            font-weight: 500;
+        }
+        .examples-dropdown {
+            position: relative;
+            margin-left: 10px;
+        }
+        .examples-btn {
+            padding: 6px 12px;
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .examples-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 350px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            z-index: 1;
+            border-radius: 4px;
+            right: 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .examples-content p {
+            padding: 10px 15px;
+            margin: 0;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .examples-content p:hover {
+            background-color: #f5f9ff;
+        }
+        .examples-dropdown:hover .examples-content {
+            display: block;
+        }
+        .chat-messages { 
+            flex-grow: 1; 
+            padding: 20px; 
+            overflow-y: auto; 
+            border-bottom: 1px solid var(--border-color);
+        }
+        .message { 
+            margin-bottom: 15px; 
+            padding: 12px 15px; 
+            border-radius: 6px; 
+            line-height: 1.5;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            max-width: 75%;
+        }
+        .user-message { 
+            background-color: #e1f5fe; 
+            text-align: right; 
+            margin-left: auto; 
+            border-bottom-right-radius: 2px;
+            color: #01579b;
+        }
+        .bot-message { 
+            background-color: var(--secondary-color); 
+            text-align: left; 
+            margin-right: auto; 
+            border-bottom-left-radius: 2px;
+            max-width: 85%;
+        }
+        .bot-message strong { 
+            font-weight: 600; 
+            display: block; 
+            margin-bottom: 5px; 
+            color: var(--primary-color);
+        }
+        .chat-input { 
+            display: flex; 
+            padding: 15px; 
+            border-top: 1px solid var(--border-color);
+            background-color: white;
+        }
+        #userInput { 
+            flex-grow: 1; 
+            padding: 12px 15px; 
+            border: 1px solid var(--border-color); 
+            border-radius: 4px; 
+            margin-right: 10px;
+            font-size: 1rem;
+            outline: none;
+        }
+        #userInput:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(0,120,212,0.2);
+        }
+        #sendButton { 
+            padding: 10px 20px; 
+            background-color: var(--primary-color); 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        #sendButton:hover { 
+            background-color: var(--hover-color);
+        }
+        .loader {
+            display: none;
+            border: 3px solid rgba(0,120,212,0.2);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Enhanced Citation Styles */
+        .citations-section {
+            margin-top: 15px;
+            padding: 12px;
+            background-color: var(--citation-bg);
+            border-left: 4px solid var(--primary-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .citations-header {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+        }
+        .citations-header::before {
+            content: "📚";
+            margin-right: 6px;
+        }
+        .citation-item {
+            margin: 6px 0;
+            padding: 8px 10px;
+            background-color: white;
+            border: 1px solid var(--citation-border);
+            border-radius: 3px;
+            display: flex;
+            align-items: flex-start;
+        }
+        .citation-number {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-right: 8px;
+            min-width: 20px;
+        }
+        .citation-content {
+            flex-grow: 1;
+        }
+        .citation-source {
+            font-weight: 500;
+            color: var(--text-color);
+            margin-bottom: 2px;
+        }
+        .citation-details {
+            font-size: 0.8rem;
+            color: var(--light-text);
+            margin-top: 2px;
+        }
+        .citation-type {
+            display: inline-block;
+            padding: 2px 6px;
+            background-color: #e6f3ff;
+            color: #0066cc;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            margin-right: 6px;
+        }
+        .field-info {
+            display: inline-block;
+            padding: 2px 6px;
+            background-color: #fff3cd;
+            color: #856404;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            margin-left: 6px;
+        }
+        
+        .metadata-info {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: var(--light-text);
+        }
+        .confidence-indicator {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-right: 8px;
+            background-color: #e6f7ff;
+            color: #0078d4;
+            font-weight: 500;
+        }
+        .confidence-high { background-color: #d4edda; color: #155724; }
+        .confidence-medium { background-color: #fff3cd; color: #856404; }
+        .confidence-low { background-color: #f8d7da; color: #721c24; }
+        
+        code {
+            background-color: rgba(0,0,0,0.05);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .collapsible-citations {
+            cursor: pointer;
+            user-select: none;
+        }
+        .collapsible-citations:hover {
+            background-color: #f0f8ff;
+        }
+        .citations-content {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2>Universal Medical/Dental File Data Dictionary</h2>
+            <p>Interactive RAG-assisted knowledge base with source citations</p>
+            <small style="opacity: 0.7;">v2.1 - Citation Fix Applied</small>
+        </div>
+        <div class="config-bar">
+            <span class="model-label">Model:</span>
+            <select class="model-select" id="modelSelect">
+                <option value="gemini-2.5-flash-preview-04-17">Gemini 2.5 Flash - Faster</option>
+                <option value="gemini-2.5-pro-preview-05-06">Gemini 2.5 Pro - More Accurate</option>
+            </select>
+            <div class="examples-dropdown">
+                <button class="examples-btn">Example Questions</button>
+                <div class="examples-content">
+                    <p class="example-question">How to identify Dental Claim?</p>
+                    <p class="example-question">How to identify supplies Claim?</p>
+                    <p class="example-question">How to identify workers comp Claim?</p>
+                    <p class="example-question">How to identify subrogation Claim?</p>
+                    <p class="example-question">How to identify in-house/340b  Claim?</p>
+                    <p class="example-question">How to identify supplies, workers comp claims, subrogation claims, and in-house/340b claims?</p>
+                    <p class="example-question">How to identify indemnity Claim?</p>
+                    <p class="example-question">What is field 15 in the Universal file?</p>
+                    <p class="example-question">Explain External Stop Loss reporting requirements</p>
+                    <p class="example-question">What are the capitation payment file specifications?</p>
+                    <p class="example-question">Where can I find provider identification fields?</p>
+                    <p class="example-question">What is ICD9_DX_CD?</p>
+                    <p class="example-question">Present on Admission Code</p>
+                    <p class="example-question">Explain Aexcel Designated Provider Specialty</p>
+                </div>
+            </div>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot-message">
+                <strong>Assistant:</strong> Welcome to the Universal Medical/Dental File Data Dictionary with enhanced source citations. Ask me about any field definitions, file layouts, or technical specifications and I'll provide detailed answers with references to the source documents and page numbers.
+            </div>
+        </div>
+        <div class="chat-input">
+            <div class="loader" id="loader"></div>
+            <input type="text" id="userInput" placeholder="Ask about field definitions, file layouts, or technical specifications...">
+            <button id="sendButton">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
+        const loader = document.getElementById('loader');
+        const modelSelect = document.getElementById('modelSelect');
+        const exampleQuestions = document.querySelectorAll('.example-question');
+
+        function getConfidenceClass(confidence) {
+            if (confidence >= 0.8) return 'confidence-high';
+            if (confidence >= 0.6) return 'confidence-medium';
+            return 'confidence-low';
+        }
+
+        function formatCitations(citations) {
+            if (!citations || citations.length === 0) {
+                return '';
+            }
+
+            // Debug logging to see exact citation structure
+            console.log('formatCitations called with:', citations);
+            console.log('Type of citations:', typeof citations);
+            console.log('Is citations array:', Array.isArray(citations));
+
+            try {
+                let citationsHTML = `
+                    <div class="citations-section">
+                        <div class="citations-header collapsible-citations" onclick="toggleCitations(this)">
+                            Sources (${citations.length}) - Click to expand
+                        </div>
+                        <div class="citations-content" style="display: none;">
+                `;
+
+                citations.forEach((citation, idx) => {
+                    try {
+                        // Handle missing or incomplete citation data gracefully
+                        const index = citation.index || (idx + 1);
+                        const source = citation.formatted_source || citation.source_file || 'Unknown Source';
+                        const docType = citation.document_type || 'Unknown';
+                        const sectionTitle = citation.section_title;
+                        // Ensure fieldNumbers is always an array
+                        const fieldNumbers = Array.isArray(citation.field_numbers) ? citation.field_numbers : [];
+                        const containsFields = citation.contains_field_definitions;
+                        
+                        citationsHTML += `
+                            <div class="citation-item">
+                                <span class="citation-number">[${index}]</span>
+                                <div class="citation-content">
+                                    <div class="citation-source">${source}</div>
+                                    <div class="citation-details">
+                                        <span class="citation-type">${docType}</span>
+                        `;
+
+                        if (sectionTitle && sectionTitle !== 'Unknown Section' && sectionTitle !== '') {
+                            citationsHTML += `<span style="color: #666;">Section: ${sectionTitle}</span>`;
+                        }
+
+                        if (containsFields && fieldNumbers && fieldNumbers.length > 0) {
+                            try {
+                                // Triple-check that fieldNumbers is an array and has array methods
+                                if (Array.isArray(fieldNumbers) && typeof fieldNumbers.slice === 'function' && typeof fieldNumbers.join === 'function') {
+                                    const fieldDisplay = fieldNumbers.slice(0, 3).join(', ');
+                                    const moreFields = fieldNumbers.length > 3 ? ` +${fieldNumbers.length - 3} more` : '';
+                                    citationsHTML += `<span class="field-info">Fields: ${fieldDisplay}${moreFields}</span>`;
+                                } else {
+                                    console.warn('fieldNumbers is not a proper array:', fieldNumbers);
+                                    citationsHTML += `<span class="field-info">Fields: ${JSON.stringify(fieldNumbers)}</span>`;
+                                }
+                            } catch (fieldError) {
+                                console.error('Error processing field numbers:', fieldError, fieldNumbers);
+                                citationsHTML += `<span class="field-info">Fields: (processing error)</span>`;
+                            }
+                        }
+
+                        citationsHTML += `
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } catch (citationError) {
+                        console.error('Error formatting individual citation:', citationError, citation);
+                        // Add a basic citation entry if there's an error
+                        citationsHTML += `
+                            <div class="citation-item">
+                                <span class="citation-number">[${idx + 1}]</span>
+                                <div class="citation-content">
+                                    <div class="citation-source">Citation formatting error</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+
+                citationsHTML += `
+                        </div>
+                    </div>
+                `;
+
+                return citationsHTML;
+            } catch (error) {
+                console.error('Error formatting citations:', error);
+                return `<div class="citations-section">Error displaying citations</div>`;
+            }
+        }
+
+        function toggleCitations(element) {
+            const content = element.nextElementSibling;
+            const isHidden = content.style.display === 'none';
+            content.style.display = isHidden ? 'block' : 'none';
+            element.textContent = isHidden ? 
+                `Sources (${element.textContent.match(/\d+/)[0]}) - Click to collapse` : 
+                `Sources (${element.textContent.match(/\d+/)[0]}) - Click to expand`;
+        }
+
+        function addMessage(sender, text, metadata = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            
+            if (sender === 'user') {
+                messageDiv.classList.add('user-message');
+                messageDiv.textContent = text;
+            } else {
+                messageDiv.classList.add('bot-message');
+                
+                // Format the main answer text (preserve line breaks but handle markdown-like formatting)
+                let formattedText = text
+                    .replace(/\n/g, '<br>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>');
+                
+                let botResponseHTML = `<strong>Assistant:</strong> ${formattedText}`;
+                
+                // Add citations if available
+                if (metadata && metadata.citations && metadata.citations.length > 0) {
+                    botResponseHTML += formatCitations(metadata.citations);
+                }
+                
+                // Add metadata information
+                if (metadata) {
+                    let metadataHTML = '<div class="metadata-info">';
+                    
+                    // Confidence score
+                    if (metadata.confidence_score !== undefined) {
+                        const confidencePercent = Math.round(metadata.confidence_score * 100);
+                        const confidenceClass = getConfidenceClass(metadata.confidence_score);
+                        metadataHTML += `<span class="confidence-indicator ${confidenceClass}">Confidence: ${confidencePercent}%</span>`;
+                    }
+                    
+                    // Model used
+                    if (metadata.model_used) {
+                        const modelName = metadata.model_used.includes('gemini-2.5-flash') ? 'Gemini 2.5 Flash' : 
+                                      metadata.model_used.includes('gemini-2.5-pro') ? 'Gemini 2.5 Pro' : 
+                                      metadata.model_used;
+                        metadataHTML += `<span class="confidence-indicator">Model: ${modelName}</span>`;
+                    }
+                    
+                    // Response time
+                    if (metadata.response_time !== undefined) {
+                        metadataHTML += `<span class="confidence-indicator">Response time: ${metadata.response_time}s</span>`;
+                    }
+                    
+                    // Research depth
+                    if (metadata.research_depth) {
+                        metadataHTML += `<span class="confidence-indicator">Research: ${metadata.research_depth}</span>`;
+                    }
+                    
+                    metadataHTML += '</div>';
+                    botResponseHTML += metadataHTML;
+                }
+                
+                messageDiv.innerHTML = botResponseHTML;
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll to bottom
+        }
+
+        async function sendMessage() {
+            const query = userInput.value.trim();
+            if (!query) return;
+
+            // Get the selected model
+            const selectedModel = modelSelect.value;
+
+            addMessage('user', query);
+            userInput.value = '';
+            loader.style.display = 'block';
+            sendButton.disabled = true;
+
+            try {
+                const response = await fetch('/chat_rag', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        query: query,
+                        model: selectedModel
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    addMessage('bot', `Error: ${errorData.error || response.statusText}`);
+                    return;
+                }
+
+                const data = await response.json();
+                console.log('Response data:', data); // Debug log
+                
+                // Debug: Log citation data specifically
+                if (data.citations) {
+                    console.log('Citations received:', data.citations.length);
+                    console.log('First citation sample:', data.citations[0]);
+                } else {
+                    console.log('No citations in response');
+                }
+                
+                // Create metadata object for rendering
+                const metadata = {
+                    confidence_score: data.confidence_score,
+                    citations: data.citations || [],
+                    model_used: data.model_used,
+                    response_time: data.response_time,
+                    research_depth: data.research_depth,
+                    query_intent: data.query_intent
+                };
+                
+                addMessage('bot', data.answer, metadata);
+
+            } catch (error) {
+                console.error('Error sending message:', error);
+                
+                // More specific error messages
+                let errorMessage = 'Sorry, I encountered an error. Please try again.';
+                if (error.name === 'SyntaxError') {
+                    errorMessage = 'Error: Invalid response format from server.';
+                    console.error('JSON parsing error:', error);
+                } else if (error.message) {
+                    errorMessage = `Error: ${error.message}`;
+                }
+                
+                addMessage('bot', errorMessage);
+            } finally {
+                loader.style.display = 'none';
+                sendButton.disabled = false;
+                userInput.focus();
+            }
+        }
+
+        // Set up event listeners
+        sendButton.addEventListener('click', sendMessage);
+        
+        userInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        // Set up example question clicks
+        exampleQuestions.forEach(question => {
+            question.addEventListener('click', function() {
+                userInput.value = this.textContent;
+                userInput.focus();
+            });
+        });
+
+        // Make toggleCitations available globally
+        window.toggleCitations = toggleCitations;
+    </script>
+</body>
+</html>
