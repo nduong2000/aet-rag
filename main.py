@@ -65,6 +65,40 @@ else:
         print(f"⚠ Warning: API key file not found at {API_KEY_PATH}")
         print("⚠ Attempting to use default credentials (e.g., gcloud auth application-default login)")
 
+# Verify authentication setup
+try:
+    from google.oauth2 import service_account
+    from google.auth import default
+    
+    # Try to load service account credentials explicitly first
+    API_KEY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "api_key.json")
+    if os.path.exists(API_KEY_PATH) and not os.getenv("K_SERVICE"):
+        # Local development - use service account file
+        credentials = service_account.Credentials.from_service_account_file(API_KEY_PATH)
+        with open(API_KEY_PATH, 'r') as f:
+            key_data = json.load(f)
+            project = key_data['project_id']
+        print(f"✓ Loaded service account credentials - Project: {project}")
+        print(f"✓ Service account: {key_data.get('client_email')}")
+    else:
+        # Cloud Run or fallback to default
+        credentials, project = default()
+        print(f"✓ Using default credentials - Project: {project}")
+    
+    if not os.getenv("GOOGLE_CLOUD_PROJECT"):
+        os.environ["GOOGLE_CLOUD_PROJECT"] = project
+        print(f"✓ Set GOOGLE_CLOUD_PROJECT to: {project}")
+        
+    # Store credentials globally for use in model initialization
+    _GLOBAL_CREDENTIALS = credentials
+    _GLOBAL_PROJECT = project
+    
+except Exception as e:
+    print(f"⚠ Warning: Authentication verification failed: {e}")
+    print("⚠ This may cause issues with Vertex AI models")
+    _GLOBAL_CREDENTIALS = None
+    _GLOBAL_PROJECT = None
+
 # Load environment variables
 load_dotenv()
 
@@ -90,7 +124,7 @@ class Config:
     
     # GCP settings
     GCP_PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "aethrag2")
-    GCP_LOCATION = os.getenv("GCP_LOCATION", "us-east1")
+    GCP_LOCATION = os.getenv("GCP_LOCATION", "us-central1")
     
     # Field definitions
     FIELD_DEFINITIONS_FILE = os.getenv("FIELD_DEFINITIONS_FILE", "field_definitions.json")
@@ -223,14 +257,25 @@ class AetnaDataScienceRAGSystem:
     def _initialize_embeddings(self):
         """Initialize embedding model"""
         try:
+            # Use global credentials if available
+            global _GLOBAL_CREDENTIALS
+            credentials = _GLOBAL_CREDENTIALS
+            
+            if credentials is None:
+                # Fallback to default credentials
+                from google.auth import default
+                credentials, _ = default()
+            
             self.embeddings = VertexAIEmbeddings(
                 model_name=self.config.EMBEDDING_MODEL,
                 project=self.config.GCP_PROJECT_ID,
-                location=self.config.GCP_LOCATION
+                location=self.config.GCP_LOCATION,
+                credentials=credentials
             )
             logger.info(f"✓ Initialized embeddings: {self.config.EMBEDDING_MODEL}")
         except Exception as e:
             logger.error(f"❌ Failed to initialize embeddings: {e}")
+            logger.error(f"❌ Check your GCP credentials and project settings")
     
     def _create_workflow(self):
         """Create the LangGraph workflow for deep research"""
@@ -566,12 +611,26 @@ class AetnaDataScienceRAGSystem:
         model_name = model_name or self.config.DEFAULT_CHAT_MODEL
         model_config = self.config.AVAILABLE_MODELS.get(model_name, {"temperature": 0.1})
         
-        return ChatVertexAI(
-            model_name=model_name,
-            project=self.config.GCP_PROJECT_ID,
-            location=self.config.GCP_LOCATION,
-            **model_config
-        )
+        try:
+            # Use global credentials if available
+            global _GLOBAL_CREDENTIALS
+            credentials = _GLOBAL_CREDENTIALS
+            
+            if credentials is None:
+                # Fallback to default credentials
+                from google.auth import default
+                credentials, _ = default()
+            
+            return ChatVertexAI(
+                model_name=model_name,
+                project=self.config.GCP_PROJECT_ID,
+                location=self.config.GCP_LOCATION,
+                credentials=credentials,
+                **model_config
+            )
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize chat model {model_name}: {e}")
+            raise
     
     def _build_expert_prompt(self, state: ResearchState) -> List:
         """Build expert prompt for Aetna Data Scientist persona"""
