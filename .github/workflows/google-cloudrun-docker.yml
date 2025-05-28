@@ -19,7 +19,7 @@ on:
 
 env:
   PROJECT_ID: 'aethrag2' # Your GCP project ID
-  REGION: 'us-east1' # Your preferred region
+  REGION: 'us-central1' # Your preferred region - supports all Gemini models
   SERVICE: 'aet-rag-service' # Cloud Run service name
   REPOSITORY: 'aet-rag-repo' # Artifact Registry repository name
   IMAGE_NAME: 'aet-rag-app' # Docker image name

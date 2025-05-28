@@ -60,11 +60,11 @@ def test_vertex_auth():
     print("\n💬 Testing ChatVertexAI...")
     try:
         chat_model = ChatVertexAI(
-            model_name="gemini-1.5-flash-001",
+            model_name="gemini-2.5-flash-preview-04-17",
             project=project,
             location="us-central1",
             credentials=credentials,
-            temperature=0.1
+            temperature=0.15
         )
         
         # Test a simple chat

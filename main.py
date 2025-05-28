@@ -110,10 +110,14 @@ class Config:
     
     # Model settings
     EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-005")
-    DEFAULT_CHAT_MODEL = os.getenv("CHAT_MODEL", "gemini-2.5-pro-preview-05-06")
+    DEFAULT_CHAT_MODEL = os.getenv("CHAT_MODEL", "gemini-2.5-flash-preview-04-17")
     AVAILABLE_MODELS = {
+        "gemini-2.5-flash-preview-04-17": {"temperature": 0.15, "top_p": 0.9},
         "gemini-2.5-pro-preview-05-06": {"temperature": 0.1, "top_p": 0.8},
-        "gemini-2.5-flash-preview-04-17": {"temperature": 0.15, "top_p": 0.9}
+        "gemini-2.0-flash-001": {"temperature": 0.15, "top_p": 0.9},
+        "gemini-2.0-flash-lite-001": {"temperature": 0.15, "top_p": 0.9},
+        "gemini-1.5-flash-001": {"temperature": 0.15, "top_p": 0.9},
+        "gemini-1.5-pro-001": {"temperature": 0.1, "top_p": 0.8}
     }
     
     # Research settings
@@ -607,30 +611,71 @@ class AetnaDataScienceRAGSystem:
         return state
     
     def _get_chat_model(self, model_name: str = None):
-        """Get configured chat model"""
+        """Get configured chat model with fallback logic"""
         model_name = model_name or self.config.DEFAULT_CHAT_MODEL
         model_config = self.config.AVAILABLE_MODELS.get(model_name, {"temperature": 0.1})
         
-        try:
-            # Use global credentials if available
-            global _GLOBAL_CREDENTIALS
-            credentials = _GLOBAL_CREDENTIALS
-            
-            if credentials is None:
-                # Fallback to default credentials
-                from google.auth import default
-                credentials, _ = default()
-            
-            return ChatVertexAI(
-                model_name=model_name,
-                project=self.config.GCP_PROJECT_ID,
-                location=self.config.GCP_LOCATION,
-                credentials=credentials,
-                **model_config
-            )
-        except Exception as e:
-            logger.error(f"❌ Failed to initialize chat model {model_name}: {e}")
-            raise
+        # Use global credentials if available
+        global _GLOBAL_CREDENTIALS
+        credentials = _GLOBAL_CREDENTIALS
+        
+        if credentials is None:
+            # Fallback to default credentials
+            from google.auth import default
+            credentials, _ = default()
+        
+        # List of models to try in order of preference
+        models_to_try = [model_name]
+        
+        # If the requested model is not available, try fallback models
+        if model_name not in self.config.AVAILABLE_MODELS:
+            models_to_try.extend([
+                "gemini-2.5-flash-preview-04-17", 
+                "gemini-2.5-pro-preview-05-06",
+                "gemini-2.0-flash-001",
+                "gemini-2.0-flash-lite-001",
+                "gemini-1.5-flash-001",
+                "gemini-1.5-pro-001"
+            ])
+        else:
+            # Try the requested model first, then fallbacks
+            models_to_try.extend([
+                "gemini-2.5-flash-preview-04-17", 
+                "gemini-2.5-pro-preview-05-06",
+                "gemini-2.0-flash-001",
+                "gemini-2.0-flash-lite-001",
+                "gemini-1.5-flash-001",
+                "gemini-1.5-pro-001"
+            ])
+        
+        last_error = None
+        for try_model in models_to_try:
+            try:
+                try_config = self.config.AVAILABLE_MODELS.get(try_model, {"temperature": 0.1})
+                
+                chat_model = ChatVertexAI(
+                    model_name=try_model,
+                    project=self.config.GCP_PROJECT_ID,
+                    location=self.config.GCP_LOCATION,
+                    credentials=credentials,
+                    **try_config
+                )
+                
+                if try_model != model_name:
+                    logger.warning(f"⚠️ Requested model {model_name} not available, using {try_model} instead")
+                else:
+                    logger.info(f"✓ Successfully initialized chat model: {try_model}")
+                
+                return chat_model
+                
+            except Exception as e:
+                last_error = e
+                logger.warning(f"⚠️ Model {try_model} failed: {str(e)[:100]}...")
+                continue
+        
+        # If all models failed, raise the last error
+        logger.error(f"❌ All chat models failed. Last error: {last_error}")
+        raise last_error
     
     def _build_expert_prompt(self, state: ResearchState) -> List:
         """Build expert prompt for Aetna Data Scientist persona"""
