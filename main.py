@@ -40,21 +40,30 @@ except ImportError:
     LANGGRAPH_AVAILABLE = False
 
 # GCP Authentication Setup
-API_KEY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "api_key.json")
-if os.path.exists(API_KEY_PATH):
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = API_KEY_PATH
-    print(f"✓ Using Google credentials from: {API_KEY_PATH}")
-    
-    try:
-        with open(API_KEY_PATH, 'r') as key_file:
-            key_data = json.load(key_file)
-            if 'project_id' in key_data and not os.getenv("GOOGLE_CLOUD_PROJECT"):
-                os.environ["GOOGLE_CLOUD_PROJECT"] = key_data['project_id']
-                print(f"✓ Using project ID from key file: {key_data['project_id']}")
-    except Exception as e:
-        print(f"⚠ Warning: Could not extract project ID from key file: {e}")
+# Check if running in Cloud Run (which uses Workload Identity Federation)
+if os.getenv("K_SERVICE"):  # K_SERVICE is set in Cloud Run
+    print("✓ Running in Cloud Run - using Workload Identity Federation")
+    # Set project ID from environment variable
+    if os.getenv("GOOGLE_CLOUD_PROJECT"):
+        print(f"✓ Using project ID from environment: {os.getenv('GOOGLE_CLOUD_PROJECT')}")
 else:
-    print(f"⚠ Warning: API key file not found at {API_KEY_PATH}")
+    # Local development - try to use api_key.json
+    API_KEY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "api_key.json")
+    if os.path.exists(API_KEY_PATH):
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = API_KEY_PATH
+        print(f"✓ Using Google credentials from: {API_KEY_PATH}")
+        
+        try:
+            with open(API_KEY_PATH, 'r') as key_file:
+                key_data = json.load(key_file)
+                if 'project_id' in key_data and not os.getenv("GOOGLE_CLOUD_PROJECT"):
+                    os.environ["GOOGLE_CLOUD_PROJECT"] = key_data['project_id']
+                    print(f"✓ Using project ID from key file: {key_data['project_id']}")
+        except Exception as e:
+            print(f"⚠ Warning: Could not extract project ID from key file: {e}")
+    else:
+        print(f"⚠ Warning: API key file not found at {API_KEY_PATH}")
+        print("⚠ Attempting to use default credentials (e.g., gcloud auth application-default login)")
 
 # Load environment variables
 load_dotenv()
@@ -81,7 +90,7 @@ class Config:
     
     # GCP settings
     GCP_PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "aethrag2")
-    GCP_LOCATION = os.getenv("GCP_LOCATION", "us-central1")
+    GCP_LOCATION = os.getenv("GCP_LOCATION", "us-east1")
     
     # Field definitions
     FIELD_DEFINITIONS_FILE = os.getenv("FIELD_DEFINITIONS_FILE", "field_definitions.json")

@@ -107,8 +107,6 @@ jobs:
             GOOGLE_CLOUD_PROJECT=${{ env.PROJECT_ID }}
             GCP_LOCATION=${{ env.REGION }}
             PORT=8080
-          secrets: |
-            GOOGLE_APPLICATION_CREDENTIALS=/secrets/gcp-key/api_key.json:gcp-service-account-key:latest
       
       # Output the service URL
       - name: 'Show deployment URL'
