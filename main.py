@@ -110,14 +110,41 @@ class Config:
     
     # Model settings
     EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-005")
-    DEFAULT_CHAT_MODEL = os.getenv("CHAT_MODEL", "gemini-2.5-flash-preview-04-17")
+    DEFAULT_CHAT_MODEL = os.getenv("CHAT_MODEL", "gemini-2.0-flash-001")
     AVAILABLE_MODELS = {
-        "gemini-2.5-flash-preview-04-17": {"temperature": 0.15, "top_p": 0.9},
-        "gemini-2.5-pro-preview-05-06": {"temperature": 0.1, "top_p": 0.8},
-        "gemini-2.0-flash-001": {"temperature": 0.15, "top_p": 0.9},
-        "gemini-2.0-flash-lite-001": {"temperature": 0.15, "top_p": 0.9},
-        "gemini-1.5-flash-001": {"temperature": 0.15, "top_p": 0.9},
-        "gemini-1.5-pro-001": {"temperature": 0.1, "top_p": 0.8}
+        "gemini-2.0-flash-001": {
+            "temperature": 0.7,
+            "top_p": 0.95,
+            "max_output_tokens": 8192
+        },
+        "gemini-2.0-flash-lite-001": {
+            "temperature": 0.7,
+            "top_p": 0.95,
+            "max_output_tokens": 8192
+        },
+        "gemini-1.5-flash-001": {
+            "temperature": 0.7,
+            "top_p": 0.95,
+            "max_output_tokens": 8192
+        },
+        "gemini-1.5-pro-001": {
+            "temperature": 0.7,
+            "top_p": 0.95,
+            "max_output_tokens": 8192
+        },
+        # NOTE: Gemini 2.5 models are NOT available in us-east1 region
+        # They are only available in us-central1 and global regions
+        # These models will fail if used with us-east1 configuration
+        "gemini-2.5-flash-preview-05-20": {
+            "temperature": 0.7,
+            "top_p": 0.95,
+            "max_output_tokens": 8192
+        },
+        "gemini-2.5-pro-preview-05-06": {
+            "temperature": 0.7,
+            "top_p": 0.95,
+            "max_output_tokens": 8192
+        }
     }
     
     # Research settings
@@ -128,7 +155,7 @@ class Config:
     
     # GCP settings
     GCP_PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "aethrag2")
-    GCP_LOCATION = os.getenv("GCP_LOCATION", "us-central1")
+    GCP_LOCATION = os.getenv("GCP_LOCATION", "us-east1")
     
     # Field definitions
     FIELD_DEFINITIONS_FILE = os.getenv("FIELD_DEFINITIONS_FILE", "field_definitions.json")
@@ -630,28 +657,35 @@ class AetnaDataScienceRAGSystem:
         # If the requested model is not available, try fallback models
         if model_name not in self.config.AVAILABLE_MODELS:
             models_to_try.extend([
-                "gemini-2.5-flash-preview-04-17", 
-                "gemini-2.5-pro-preview-05-06",
                 "gemini-2.0-flash-001",
                 "gemini-2.0-flash-lite-001",
                 "gemini-1.5-flash-001",
-                "gemini-1.5-pro-001"
+                "gemini-1.5-pro-001",
+                # NOTE: These models will fail in us-east1 region
+                "gemini-2.5-flash-preview-05-20",
+                "gemini-2.5-pro-preview-05-06"
             ])
         else:
             # Try the requested model first, then fallbacks
             models_to_try.extend([
-                "gemini-2.5-flash-preview-04-17", 
-                "gemini-2.5-pro-preview-05-06",
                 "gemini-2.0-flash-001",
                 "gemini-2.0-flash-lite-001",
                 "gemini-1.5-flash-001",
-                "gemini-1.5-pro-001"
+                "gemini-1.5-pro-001",
+                # NOTE: These models will fail in us-east1 region
+                "gemini-2.5-flash-preview-05-20",
+                "gemini-2.5-pro-preview-05-06"
             ])
         
         last_error = None
         for try_model in models_to_try:
             try:
                 try_config = self.config.AVAILABLE_MODELS.get(try_model, {"temperature": 0.1})
+                
+                # Special warning for Gemini 2.5 models in us-east1
+                if try_model.startswith("gemini-2.5") and self.config.GCP_LOCATION == "us-east1":
+                    logger.warning(f"⚠️ Model {try_model} is not available in us-east1 region, skipping...")
+                    continue
                 
                 chat_model = ChatVertexAI(
                     model_name=try_model,
