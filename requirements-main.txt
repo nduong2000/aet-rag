@@ -1,6 +1,33 @@
-python-dotenv>=1.0.0
-Flask>=2.0.0
-langchain-google-vertexai>=0.1.0
-chromadb>=0.4.22
-langgraph>=0.1.0
-google-cloud-aiplatform>=1.36.0
+# Requirements for Enhanced RAG System with LangGraph
+# Minimal requirements - let pip handle version resolution
+flask
+python-dotenv
+gunicorn
+
+# LangChain ecosystem
+langchain
+langchain-google-vertexai
+langchain-community
+langchain-unstructured
+
+# LangGraph
+langgraph
+
+# Vector database
+chromadb
+
+
+# Google Cloud
+google-cloud-aiplatform
+google-auth
+
+# Data processing
+pandas
+numpy
+regex
+
+# Optional but recommended for better performance
+# Uncomment if needed:
+# pypdf  # For better PDF processing
+# python-magic-bin  # For file type detection (Windows)
+# python-magic  # For file type detection (Linux/Mac)

@@ -20,8 +20,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     
 
 # Copy the requirements file and install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements-main.txt .
+RUN pip install --no-cache-dir -r requirements-main.txt
 
 # Copy the rest of the application code into the image
 COPY ./documents ./documents
