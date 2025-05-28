@@ -177,3 +177,15 @@ Desktop.ini
 .env.local
 .env.production
 config.
+
+# Google Cloud credentials
+api_key.json
+service-account-key.json
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+
+# Sensitive files
+credentials/
+secrets/
