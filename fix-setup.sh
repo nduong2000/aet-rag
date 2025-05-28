@@ -18,7 +18,7 @@ REPOSITORY_NAME="aet-rag-repo"
 WIF_POOL_NAME="github-pool"
 WIF_PROVIDER_NAME="github-provider"
 SERVICE_ACCOUNT_NAME="github-actions-sa"
-GITHUB_REPO="nickduong/aet-rag"
+GITHUB_REPO="nduong2000/aet-rag"
 
 echo -e "${BLUE}🔧 Fixing IAM role assignments...${NC}"
 

@@ -20,7 +20,7 @@ REPOSITORY_NAME="aet-rag-repo"
 WIF_POOL_NAME="github-pool"
 WIF_PROVIDER_NAME="github-provider"
 SERVICE_ACCOUNT_NAME="github-actions-sa"
-GITHUB_REPO="nickduong/aet-rag"  # Update this to your GitHub repo
+GITHUB_REPO="nduong2000/aet-rag"  # Updated to correct GitHub repo
 
 echo -e "${BLUE}🚀 Setting up GCP Cloud Run deployment for AET-RAG${NC}"
 echo -e "${BLUE}Project ID: ${PROJECT_ID}${NC}"
