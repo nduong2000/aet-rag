@@ -106,7 +106,6 @@ jobs:
           env_vars: |
             GOOGLE_CLOUD_PROJECT=${{ env.PROJECT_ID }}
             GCP_LOCATION=${{ env.REGION }}
-            PORT=8080
       
       # Output the service URL
       - name: 'Show deployment URL'
