@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AET-RAG System - Architecture Overview</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 32px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .tabs {
+            display: flex;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            overflow-x: auto;
+            padding: 0 20px;
+        }
+        
+        .tab {
+            padding: 16px 24px;
+            cursor: pointer;
+            font-weight: 600;
+            border: none;
+            background: none;
+            color: #64748b;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+        
+        .tab:hover {
+            color: #4f46e5;
+            background: #f1f5f9;
+        }
+        
+        .tab.active {
+            color: #4f46e5;
+            border-bottom-color: #4f46e5;
+            background: white;
+        }
+        
+        .diagram-container {
+            padding: 40px;
+            min-height: 600px;
+            background: white;
+        }
+        
+        .diagram-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        
+        .diagram-description {
+            color: #64748b;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 1rem;
+            line-height: 1.6;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .component {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            min-width: 140px;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 8px;
+        }
+        
+        .component:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .component-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+        }
+        
+        .component-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #1e293b;
+            line-height: 1.3;
+        }
+        
+        .component-sublabel {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        
+        .flow-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 32px;
+        }
+        
+        .flow-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .arrow {
+            color: #94a3b8;
+            font-size: 1.5rem;
+            margin: 0 8px;
+        }
+        
+        .arrow-down {
+            transform: rotate(90deg);
+            margin: 16px 0;
+        }
+        
+        .section-container {
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 24px;
+            margin: 20px 0;
+            background: #f8fafc;
+        }
+        
+        .section-title {
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+        
+        .gcp-section {
+            border-color: #4285f4;
+            background: linear-gradient(135deg, #f0f7ff 0%, #bfdbfe 100%);
+        }
+        
+        .langchain-section {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #f0fdf4 0%, #bbf7d0 100%);
+        }
+        
+        .vertexai-section {
+            border-color: #ef4444;
+            background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+        }
+        
+        .database-section {
+            border-color: #8b5cf6;
+            background: linear-gradient(135deg, #f5f3ff 0%, #ddd6fe 100%);
+        }
+        
+        .frontend-section {
+            border-color: #61dafb;
+            background: linear-gradient(135deg, #f0f9ff 0%, #bae6fd 100%);
+        }
+        
+        .component.gcp { border-color: #4285f4; background: #f0f7ff; }
+        .component.langchain { border-color: #10b981; background: #f0fdf4; }
+        .component.vertexai { border-color: #ef4444; background: #fef2f2; }
+        .component.database { border-color: #8b5cf6; background: #f5f3ff; }
+        .component.frontend { border-color: #61dafb; background: #f0f9ff; }
+        .component.external { border-color: #f59e0b; background: #fffbeb; }
+        .component.cicd { border-color: #f59e0b; background: #fffbeb; }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin: 24px 0;
+        }
+        
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+            color: #475569;
+        }
+        
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        
+        .status-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-development {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        @media (max-width: 768px) {
+            .flow-row {
+                flex-direction: column;
+            }
+            
+            .arrow {
+                transform: rotate(90deg);
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab {
+                text-align: left;
+                border-bottom: 1px solid #e2e8f0;
+                border-right: 3px solid transparent;
+            }
+            
+            .tab.active {
+                border-bottom-color: #e2e8f0;
+                border-right-color: #4f46e5;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AET-RAG System</h1>
+            <p>Advanced RAG Architecture with LangChain, LangGraph & Google Vertex AI</p>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showDiagram(0)">🌐 System Overview</button>
+            <button class="tab" onclick="showDiagram(1)">🔗 LangChain Architecture</button>
+            <button class="tab" onclick="showDiagram(2)">📊 LangGraph Workflow</button>
+            <button class="tab" onclick="showDiagram(3)">🤖 Vertex AI Integration</button>
+            <button class="tab" onclick="showDiagram(4)">☁️ GCP Deployment</button>
+            <button class="tab" onclick="showDiagram(5)">🔄 CI/CD Pipeline</button>
+            <button class="tab" onclick="showDiagram(6)">📋 Current Status</button>
+        </div>
+        
+        <div id="diagrams">
+            <!-- System Overview -->
+            <div class="diagram-container" id="diagram-0">
+                <div class="diagram-title">Complete AET-RAG System Architecture</div>
+                <div class="diagram-description">
+                    End-to-end view of the AET-RAG system showing user interaction, LangChain processing, Vertex AI models, and data persistence layers.
+                </div>
+                
+                <div class="flow-container">
+                    <div class="flow-row">
+                        <div class="component external">
+                            <div class="component-icon">👤</div>
+                            <div class="component-label">Data Scientists</div>
+                            <div class="component-sublabel">End Users</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="component frontend">
+                            <div class="component-icon">🌐</div>
+                            <div class="component-label">Flask Web UI</div>
+                            <div class="component-sublabel">Chat Interface</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="component gcp">
+                            <div class="component-icon">☁️</div>
+                            <div class="component-label">Cloud Run</div>
+                            <div class="component-sublabel">Container Hosting</div>
+                        </div>
+                    </div>
+                    
+                    <div class="arrow arrow-down">→</div>
+                    
+                    <div class="flow-row">
+                        <div class="component langchain">
+                            <div class="component-icon">🔗</div>
+                            <div class="component-label">LangGraph</div>
+                            <div class="component-sublabel">Research Workflow</div>
+                        </div>
+                        <div class="arrow">↔</div>
+                        <div class="component vertexai">
+                            <div class="component-icon">🤖</div>
+                            <div class="component-label">Vertex AI</div>
+                            <div class="component-sublabel">Gemini Models</div>
+                        </div>
+                        <div class="arrow">↔</div>
+                        <div class="component database">
+                            <div class="component-icon">🗄️</div>
+                            <div class="component-label">ChromaDB</div>
+                            <div class="component-sublabel">Vector Database</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- LangChain Architecture -->
+            <div class="diagram-container" id="diagram-1" style="display: none;">
+                <div class="diagram-title">LangChain Framework Architecture</div>
+                <div class="diagram-description">
+                    LangChain components powering the RAG system with embeddings, retrievers, and chat models.
+                </div>
+                
+                <div class="langchain-section section-container">
+                    <div class="section-title">🟢 LangChain Core Components</div>
+                    <div class="grid-3">
+                        <div class="component langchain">
+                            <div class="component-icon">📝</div>
+                            <div class="component-label">ChatVertexAI</div>
+                            <div class="component-sublabel">LLM Interface</div>
+                        </div>
+                        <div class="component langchain">
+                            <div class="component-icon">🔍</div>
+                            <div class="component-label">VertexAIEmbeddings</div>
+                            <div class="component-sublabel">text-embedding-005</div>
+                        </div>
+                        <div class="component langchain">
+                            <div class="component-icon">📋</div>
+                            <div class="component-label">ChatPromptTemplate</div>
+                            <div class="component-sublabel">Prompt Engineering</div>
+                        </div>
+                        <div class="component langchain">
+                            <div class="component-icon">🔄</div>
+                            <div class="component-label">EnsembleRetriever</div>
+                            <div class="component-sublabel">Hybrid Search</div>
+                        </div>
+                        <div class="component langchain">
+                            <div class="component-icon">✂️</div>
+                            <div class="component-label">TextSplitter</div>
+                            <div class="component-sublabel">Document Chunking</div>
+                        </div>
+                        <div class="component langchain">
+                            <div class="component-icon">🔗</div>
+                            <div class="component-label">LCEL Chains</div>
+                            <div class="component-sublabel">Pipeline Orchestration</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flow-container" style="margin-top: 32px;">
+                    <div class="flow-row">
+                        <div class="component langchain">
+                            <div class="component-icon">📄</div>
+                            <div class="component-label">Document Loader</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="component langchain">
+                            <div class="component-icon">✂️</div>
+                            <div class="component-label">Text Splitter</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="component langchain">
+                            <div class="component-icon">🔍</div>
+                            <div class="component-label">Embeddings</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="component database">
+                            <div class="component-icon">🗄️</div>
+                            <div class="component-label">Vector Store</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- LangGraph Workflow -->
+            <div class="diagram-container" id="diagram-2" style="display: none;">
+                <div class="diagram-title">LangGraph Research Workflow</div>
+                <div class="diagram-description">
+                    Advanced multi-step research workflow using LangGraph for deep document analysis and response generation.
+                </div>
+                
+                <div class="flow-container">
+                    <div class="flow-row">
+                        <div class="component langchain">
+                            <div class="component-icon">🔍</div>
+                            <div class="component-label">analyze_query</div>
+                            <div class="component-sublabel">Intent & Entity Extraction</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="component langchain">
+                            <div class="component-icon">📋</div>
+                            <div class="component-label">plan_research</div>
+                            <div class="component-sublabel">Strategy Planning</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="component langchain">
+                            <div class="component-icon">📚</div>
+                            <div class="component-label">retrieve_documents</div>
+                            <div class="component-sublabel">Multi-Strategy Retrieval</div>
+                        </div>
+                    </div>
+                    
+                    <div class="arrow arrow-down">→</div>
+                    
+                    <div class="flow-row">
+                        <div class="component langchain">
+                            <div class="component-icon">🎯</div>
+                            <div class="component-label">filter_and_rank</div>
+                            <div class="component-sublabel">Relevance Scoring</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="component langchain">
+                            <div class="component-icon">🏗️</div>
+                            <div class="component-label">build_context</div>
+                            <div class="component-sublabel">Context Assembly</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="component langchain">
+                            <div class="component-icon">✍️</div>
+                            <div class="component-label">generate_answer</div>
+                            <div class="component-sublabel">Response Generation</div>
+                        </div>
+                    </div>
+                    
+                    <div class="arrow arrow-down">→</div>
+                    
+                    <div class="flow-row">
+                        <div class="component langchain">
+                            <div class="component-icon">✅</div>
+                            <div class="component-label">validate_response</div>
+                            <div class="component-sublabel">Quality Assurance</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section-container" style="margin-top: 32px;">
+                    <div class="section-title">Research Strategies</div>
+                    <div class="grid-3">
+                        <div class="component langchain">
+                            <div class="component-icon">🔍</div>
+                            <div class="component-label">Semantic Search</div>
+                        </div>
+                        <div class="component langchain">
+                            <div class="component-icon">🔤</div>
+                            <div class="component-label">Keyword Search</div>
+                        </div>
+                        <div class="component langchain">
+                            <div class="component-icon">🏷️</div>
+                            <div class="component-label">Field-Specific</div>
+                        </div>
+                        <div class="component langchain">
+                            <div class="component-icon">🔄</div>
+                            <div class="component-label">Hybrid Retrieval</div>
+                        </div>
+                        <div class="component langchain">
+                            <div class="component-icon">📊</div>
+                            <div class="component-label">Intent-Based</div>
+                        </div>
+                        <div class="component langchain">
+                            <div class="component-icon">🎯</div>
+                            <div class="component-label">Context-Aware</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Vertex AI Integration -->
+            <div class="diagram-container" id="diagram-3" style="display: none;">
+                <div class="diagram-title">Google Vertex AI Integration</div>
+                <div class="diagram-description">
+                    Comprehensive integration with Google Vertex AI services for embeddings and language models.
+                </div>
+                
+                <div class="vertexai-section section-container">
+                    <div class="section-title">🔴 Vertex AI Models</div>
+                    <div class="grid-2">
+                        <div class="component vertexai">
+                            <div class="component-icon">🤖</div>
+                            <div class="component-label">Gemini Models</div>
+                            <div class="component-sublabel">Language Generation</div>
+                            <ul class="feature-list">
+                                <li>Gemini 2.0 Flash (Default)</li>
+                                <li>Gemini 2.0 Flash Lite</li>
+                                <li>Gemini 1.5 Flash</li>
+                                <li>Gemini 1.5 Pro</li>
+                                <li>Gemini 2.5 Flash (us-central1)</li>
+                                <li>Gemini 2.5 Pro (us-central1)</li>
+                            </ul>
+                        </div>
+                        <div class="component vertexai">
+                            <div class="component-icon">🔍</div>
+                            <div class="component-label">Embedding Models</div>
+                            <div class="component-sublabel">Vector Generation</div>
+                            <ul class="feature-list">
+                                <li>text-embedding-005</li>
+                                <li>Multimodal Support</li>
+                                <li>High Dimensional Vectors</li>
+                                <li>Semantic Understanding</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="gcp-section section-container">
+                    <div class="section-title">🔵 GCP Configuration</div>
+                    <div class="flow-row">
+                        <div class="component gcp">
+                            <div class="component-icon">🔑</div>
+                            <div class="component-label">Service Account</div>
+                            <div class="component-sublabel">Authentication</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="component gcp">
+                            <div class="component-icon">🌍</div>
+                            <div class="component-label">us-east1</div>
+                            <div class="component-sublabel">Primary Region</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="component gcp">
+                            <div class="component-icon">📊</div>
+                            <div class="component-label">Project: aethrag2</div>
+                            <div class="component-sublabel">GCP Project</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flow-container" style="margin-top: 32px;">
+                    <div class="flow-row">
+                        <div class="component external">
+                            <div class="component-icon">❓</div>
+                            <div class="component-label">User Query</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="component vertexai">
+                            <div class="component-icon">🔍</div>
+                            <div class="component-label">Query Embedding</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="component database">
+                            <div class="component-icon">🔍</div>
+                            <div class="component-label">Vector Search</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="component vertexai">
+                            <div class="component-icon">🤖</div>
+                            <div class="component-label">Gemini Response</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- GCP Deployment -->
+            <div class="diagram-container" id="diagram-4" style="display: none;">
+                <div class="diagram-title">Google Cloud Platform Deployment</div>
+                <div class="diagram-description">
+                    Complete deployment architecture on Google Cloud Platform with Docker containers and Cloud Run.
+                </div>
+                
+                <div class="gcp-section section-container">
+                    <div class="section-title">🔵 GCP Infrastructure</div>
+                    <div class="flow-row">
+                        <div class="component gcp">
+                            <div class="component-icon">🌐</div>
+                            <div class="component-label">Cloud Run</div>
+                            <div class="component-sublabel">aet-rag-service</div>
+                        </div>
+                        <div class="arrow">←</div>
+                        <div class="component gcp">
+                            <div class="component-icon">📦</div>
+                            <div class="component-label">Artifact Registry</div>
+                            <div class="component-sublabel">aet-rag-repo-east</div>
+                        </div>
+                        <div class="arrow">←</div>
+                        <div class="component gcp">
+                            <div class="component-icon">🐳</div>
+                            <div class="component-label">Docker Image</div>
+                            <div class="component-sublabel">Python FastAPI</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section-container">
+                    <div class="section-title">Container Architecture</div>
+                    <div class="grid-3">
+                        <div class="component gcp">
+                            <div class="component-icon">🐍</div>
+                            <div class="component-label">Python 3.9</div>
+                            <div class="component-sublabel">Runtime</div>
+                        </div>
+                        <div class="component gcp">
+                            <div class="component-icon">⚡</div>
+                            <div class="component-label">Flask</div>
+                            <div class="component-sublabel">Web Framework</div>
+                        </div>
+                        <div class="component langchain">
+                            <div class="component-icon">🔗</div>
+                            <div class="component-label">LangChain</div>
+                            <div class="component-sublabel">RAG Framework</div>
+                        </div>
+                        <div class="component langchain">
+                            <div class="component-icon">📊</div>
+                            <div class="component-label">LangGraph</div>
+                            <div class="component-sublabel">Workflow Engine</div>
+                        </div>
+                        <div class="component database">
+                            <div class="component-icon">🗄️</div>
+                            <div class="component-label">ChromaDB</div>
+                            <div class="component-sublabel">Vector Store</div>
+                        </div>
+                        <div class="component vertexai">
+                            <div class="component-icon">🤖</div>
+                            <div class="component-label">Vertex AI SDK</div>
+                            <div class="component-sublabel">AI Integration</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flow-container" style="margin-top: 32px;">
+                    <div class="flow-row">
+                        <div class="component external">
+                            <div class="component-icon">🌐</div>
+                            <div class="component-label">Internet</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="component gcp">
+                            <div class="component-icon">🔗</div>
+                            <div class="component-label">Cloud Run URL</div>
+                            <div class="component-sublabel">aet-rag-service-*.us-east1.run.app</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="component gcp">
+                            <div class="component-icon">🐳</div>
+                            <div class="component-label">Container Instance</div>
+                            <div class="component-sublabel">Auto-scaling</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- CI/CD Pipeline -->
+            <div class="diagram-container" id="diagram-5" style="display: none;">
+                <div class="diagram-title">Automated CI/CD Pipeline</div>
+                <div class="diagram-description">
+                    GitHub Actions-powered deployment pipeline with Docker containerization and Google Cloud deployment.
+                </div>
+                
+                <div class="section-container">
+                    <div class="section-title">🔄 Deployment Pipeline</div>
+                    <div class="flow-container">
+                        <div class="component cicd">
+                            <div class="component-icon">📚</div>
+                            <div class="component-label">GitHub Repository</div>
+                            <div class="component-sublabel">Source Code</div>
+                        </div>
+                        <div class="arrow arrow-down">→</div>
+                        <div class="component cicd">
+                            <div class="component-icon">⚙️</div>
+                            <div class="component-label">GitHub Actions</div>
+                            <div class="component-sublabel">CI/CD Trigger</div>
+                        </div>
+                        <div class="arrow arrow-down">→</div>
+                        <div class="component cicd">
+                            <div class="component-icon">🐳</div>
+                            <div class="component-label">Docker Build</div>
+                            <div class="component-sublabel">--platform linux/amd64</div>
+                        </div>
+                        <div class="arrow arrow-down">→</div>
+                        <div class="component gcp">
+                            <div class="component-icon">📦</div>
+                            <div class="component-label">Artifact Registry</div>
+                            <div class="component-sublabel">Image Push</div>
+                        </div>
+                        <div class="arrow arrow-down">→</div>
+                        <div class="component gcp">
+                            <div class="component-icon">🚀</div>
+                            <div class="component-label">Cloud Run Deploy</div>
+                            <div class="component-sublabel">Service Update</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid-2">
+                    <div class="section-container">
+                        <div class="section-title">Build Process</div>
+                        <ul class="feature-list">
+                            <li><strong>Trigger:</strong> Push to main branch</li>
+                            <li><strong>Environment:</strong> ubuntu-latest</li>
+                            <li><strong>Docker:</strong> Multi-stage build</li>
+                            <li><strong>Platform:</strong> linux/amd64</li>
+                            <li><strong>Registry:</strong> us-east1-docker.pkg.dev</li>
+                            <li><strong>Authentication:</strong> Workload Identity</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="section-container">
+                        <div class="section-title">Deployment Features</div>
+                        <ul class="feature-list">
+                            <li><strong>Auto-scaling:</strong> 0-10 instances</li>
+                            <li><strong>Memory:</strong> 2Gi per instance</li>
+                            <li><strong>CPU:</strong> 1 vCPU per instance</li>
+                            <li><strong>Timeout:</strong> 300 seconds</li>
+                            <li><strong>Port:</strong> 8080</li>
+                            <li><strong>Health Check:</strong> /health endpoint</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Current Status -->
+            <div class="diagram-container" id="diagram-6" style="display: none;">
+                <div class="diagram-title">System Status & Configuration</div>
+                <div class="diagram-description">
+                    Current deployment status, URLs, and configuration details for the AET-RAG system.
+                </div>
+                
+                <div class="grid-2">
+                    <div class="gcp-section section-container">
+                        <div class="section-title">Deployment Status <span class="status-badge status-active">✅ Active</span></div>
+                        <ul class="feature-list">
+                            <li><strong>Service URL:</strong> aet-rag-service-946801466441.us-east1.run.app</li>
+                            <li><strong>Region:</strong> us-east1</li>
+                            <li><strong>Project:</strong> aethrag2</li>
+                            <li><strong>Runtime:</strong> Python 3.9 + Flask</li>
+                            <li><strong>Container:</strong> Docker via Artifact Registry</li>
+                            <li><strong>Auto-scaling:</strong> 0-10 instances</li>
+                            <li><strong>Memory:</strong> 2Gi per instance</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="vertexai-section section-container">
+                        <div class="section-title">AI Models Status <span class="status-badge status-active">✅ Active</span></div>
+                        <ul class="feature-list">
+                            <li><strong>Default Model:</strong> gemini-2.0-flash-001</li>
+                            <li><strong>Available Models:</strong> 6 models configured</li>
+                            <li><strong>Embeddings:</strong> text-embedding-005</li>
+                            <li><strong>Region Support:</strong> us-east1 optimized</li>
+                            <li><strong>Fallback Logic:</strong> Automatic model switching</li>
+                            <li><strong>Temperature:</strong> 0.7 (configurable)</li>
+                            <li><strong>Max Tokens:</strong> 8192 output</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="database-section section-container" style="margin-top: 24px;">
+                    <div class="section-title">Key Features & Capabilities</div>
+                    <div class="grid-3">
+                        <div class="component database">
+                            <div class="component-icon">📚</div>
+                            <div class="component-label">Document Processing</div>
+                            <div class="component-sublabel">PDF, Text, Multi-format</div>
+                        </div>
+                        <div class="component langchain">
+                            <div class="component-icon">🔍</div>
+                            <div class="component-label">Advanced RAG</div>
+                            <div class="component-sublabel">Multi-strategy Retrieval</div>
+                        </div>
+                        <div class="component langchain">
+                            <div class="component-icon">📊</div>
+                            <div class="component-label">LangGraph Workflow</div>
+                            <div class="component-sublabel">7-step Research Process</div>
+                        </div>
+                        <div class="component vertexai">
+                            <div class="component-icon">🤖</div>
+                            <div class="component-label">Gemini Integration</div>
+                            <div class="component-sublabel">6 Model Options</div>
+                        </div>
+                        <div class="component database">
+                            <div class="component-icon">🗄️</div>
+                            <div class="component-label">Vector Database</div>
+                            <div class="component-sublabel">ChromaDB Persistence</div>
+                        </div>
+                        <div class="component frontend">
+                            <div class="component-icon">💬</div>
+                            <div class="component-label">Interactive Chat</div>
+                            <div class="component-sublabel">Web-based Interface</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section-container" style="margin-top: 24px;">
+                    <div class="section-title">Technical Specifications</div>
+                    <div class="grid-2">
+                        <div>
+                            <h4>Framework Stack</h4>
+                            <ul class="feature-list">
+                                <li>LangChain 0.3+ (Core Framework)</li>
+                                <li>LangGraph (Workflow Engine)</li>
+                                <li>Flask (Web Framework)</li>
+                                <li>ChromaDB (Vector Database)</li>
+                                <li>Google Vertex AI SDK</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4>Infrastructure</h4>
+                            <ul class="feature-list">
+                                <li>Google Cloud Run (Serverless)</li>
+                                <li>Artifact Registry (Container Storage)</li>
+                                <li>GitHub Actions (CI/CD)</li>
+                                <li>Docker (Containerization)</li>
+                                <li>Workload Identity (Authentication)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showDiagram(index) {
+            // Hide all diagrams
+            const diagrams = document.querySelectorAll('.diagram-container');
+            diagrams.forEach(diagram => {
+                diagram.style.display = 'none';
+            });
+            
+            // Show the selected diagram
+            document.getElementById(`diagram-${index}`).style.display = 'block';
+            
+            // Update active tab
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach((tab, i) => {
+                if (i === index) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+        }
+        
+        // Add some interactive hover effects
+        document.addEventListener('DOMContentLoaded', function() {
+            const components = document.querySelectorAll('.component');
+            components.forEach(component => {
+                component.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-4px) scale(1.02)';
+                });
+                
+                component.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+        });
+    </script>
+</body>
+</html> 
